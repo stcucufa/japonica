@@ -52,6 +52,28 @@ const always = K(true);
         )
     );
 
+    if (columnCount > rowCount) {
+        const width = squareSize * columnCount / colors.length;
+        root.appendChild(svg("g", {
+            transform: `translate(0, ${rowCount * squareSize + m / 2})`
+        }, colors.map((color, i) => svg("rect", {
+            x: i * width,
+            width,
+            height: m / 2,
+            fill: color
+        }))));
+    } else {
+        const height = squareSize * rowCount / colors.length;
+        root.appendChild(svg("g", {
+            transform: `translate(${columnCount * squareSize + m / 2}, 0)`
+        }, colors.map((color, i) => svg("rect", {
+            y: i * height,
+            width: m / 2,
+            height,
+            fill: color
+        }))));
+    }
+
     const colorUrn = Urn.create(colors, rng);
     const bgColor = mixRGB(
         mixRGB(hexToRGB(colorUrn.pick()), hexToRGB(colorUrn.pick())),
@@ -61,7 +83,7 @@ const always = K(true);
     document.body.style.backgroundColor = RGBtoHex(bgColor);
 
     const patterns = [
-        // Circle
+        // Circle (filled/donut)
         [(g, fgColor, bgColor) => {
             g.appendChild(svg("circle", {
                 cx: squareSize / 2,
@@ -98,9 +120,9 @@ const always = K(true);
             }));
         }, always],
 
-        // Dots (1, 4, 9, 16 or 25)
+        // Dots
         [(g, color) => {
-            const n = rng.randomItem([1, 2, 2, 3, 3, 3, 4, 4, 5]);
+            const n = rng.randomItem([1, 2, 2, 3, 3, 3, 4, 4, 5, 6, 7]);
             const s = squareSize / n;
             const r = s / 4;
             for (let x of range(0, n - 1)) {
@@ -118,7 +140,7 @@ const always = K(true);
         // Bars
         [(g, color) => {
             const horizontal = rng.coinToss();
-            const n = rng.randomInt(2, 5);
+            const n = rng.randomInt(2, 10);
             const s = squareSize / n;
             for (let i = 0; i < n; i += 2) {
                 g.appendChild(svg("rect", {
