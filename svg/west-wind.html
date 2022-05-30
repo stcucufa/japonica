@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Véra Molnar, West Wind</title>
+        <meta charset="utf8">
+        <script type="module" src="west-wind.js"></script>
+        <style>
+
+html, body, svg {
+    height: 100%;
+    font-family: Univers, ui-sans-serif, sans-serif;
+}
+
+body {
+    margin: 0;
+}
+
+p, h1 {
+    margin-left: 2rem;
+    width: 24rem;
+}
+
+.poem {
+    font-style: italic;
+}
+
+.attribution {
+    text-align: right;
+}
+
+svg {
+    position: absolute;
+    display: block;
+    width: 100%;
+}
+
+        </style>
+    </head>
+    <body>
+        <svg xmlns="http://www.w3.org/2000/svg">
+            <g fill="none" stroke="#ff6e59" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+
+        <h1>Ode to the West Wind</h1>
+        <p class="poem">
+            O Wild West Wind, thou breath of Autumn’s being,<br>
+            Thou, from whose unseen presence the leaves dead<br>
+            Are driven, like ghosts from an enchanter fleeing,
+        </p>
+        <p class="poem">
+            Yellow, and black, and pale, and hectic red,<br>
+            Pestilence-stricken multitudes: O Thou,<br>
+            Who chariotest to their dark wintry bed
+        </p>
+        <p class="poem">
+            The winged seeds, where they lie cold and low,<br>
+            Each like a corpse within its grave...
+        </p>
+        <p class="attribution">Percy Bysshe Shelley, 1820</p>
+
+        <p>
+            <strong>1. procedure</strong> WildWind<br>
+            <strong>2. var</strong><br>
+            <strong>3. </strong>n : integer
+        </p>
+        <p>
+            <strong>4. procedure</strong> W<br>
+            <strong>5. begin</strong><br>
+            <strong>6. </strong>pen size(2 + random <strong>mod</strong> 2)<br>
+            <strong>7. </strong>turn(0)<br>
+            <strong>8. </strong>turn(+125 + random <strong>mod</strong> 70)<br>
+            <strong>9. </strong>move(100 + random <strong>mod</strong> 42)<br>
+            <strong>10. </strong>turn(-165 + random <strong>mod</strong> 5)<br>
+            <strong>11. </strong>move(80 + random <strong>mod</strong> 42)<br>
+            <strong>12. </strong>turn(+165 + random <strong>mod</strong> 5)<br>
+            <strong>13. </strong>move(80 + random <strong>mod</strong> 42)<br>
+            <strong>14. </strong>turn(-165 + random <strong>mod</strong> 5)<br>
+            <strong>15. </strong>move(180 + random <strong>mod</strong> 42)
+        </p>
+        <p>
+            <strong>16. end</strong>
+        </p>
+        <p>
+            <strong>17. begin</strong><br>
+            <strong>18. </strong>showdrawing<br>
+            <strong>19. </strong>moveto(x1 + 90, 450)<br>
+            <strong>20. for </strong>n : = 1 <strong>to</strong> 17 <strong>do</strong> W<br>
+            <strong>21. end</strong>
+        </p>
+        <p class="attribution">Véra Molnar, 2010</p>
+    </body>
+</html>
