@@ -42,49 +42,9 @@ const always = K(true);
         height: squareSize
     })));
 
-    // The main grid
-    const grid = root.appendChild(svg("g"));
-
-    // TODO our own colors
-    const colors = rng.randomItem(
-        await fetch("https://unpkg.com/nice-color-palettes@3.0.0/100.json").then(
-            response => response.json()
-        )
-    );
-
-    if (columnCount > rowCount) {
-        const width = squareSize * columnCount / colors.length;
-        root.appendChild(svg("g", {
-            transform: `translate(0, ${rowCount * squareSize + m / 2})`
-        }, colors.map((color, i) => svg("rect", {
-            x: i * width,
-            width,
-            height: m / 2,
-            fill: color
-        }))));
-    } else {
-        const height = squareSize * rowCount / colors.length;
-        root.appendChild(svg("g", {
-            transform: `translate(${columnCount * squareSize + m / 2}, 0)`
-        }, colors.map((color, i) => svg("rect", {
-            y: i * height,
-            width: m / 2,
-            height,
-            fill: color
-        }))));
-    }
-
-    const colorUrn = Urn.create(colors, rng);
-    const bgColor = mixRGB(
-        mixRGB(hexToRGB(colorUrn.pick()), hexToRGB(colorUrn.pick())),
-        [255, 255, 255],
-        0.75
-    );
-    document.body.style.backgroundColor = RGBtoHex(bgColor);
-
     const patterns = [
         // Circle (filled/donut)
-        [(g, fgColor, bgColor) => {
+        [(g, colorUrn, fgColor, bgColor) => {
             g.appendChild(svg("circle", {
                 cx: squareSize / 2,
                 cy: squareSize / 2,
@@ -102,7 +62,7 @@ const always = K(true);
         }, always],
 
         // Two circles (clipped)
-        [(g, color) => {
+        [(g, colorUrn, color) => {
             const flip = rng.coinToss();
             g.appendChild(svg("circle", {
                 cx: flip ? squareSize : 0,
@@ -121,7 +81,7 @@ const always = K(true);
         }, always],
 
         // Dots
-        [(g, color) => {
+        [(g, colorUrn, color) => {
             const n = rng.randomItem([1, 2, 2, 3, 3, 3, 4, 4, 5, 6, 7]);
             const s = squareSize / n;
             const r = s / 4;
@@ -138,7 +98,7 @@ const always = K(true);
         }, always],
 
         // Bars
-        [(g, color) => {
+        [(g, colorUrn, color) => {
             const horizontal = rng.coinToss();
             const n = rng.randomInt(2, 10);
             const s = squareSize / n;
@@ -154,7 +114,7 @@ const always = K(true);
         }, always],
 
         // Cross
-        [(g, color) => {
+        [(g, colorUrn, color) => {
             const r = squareSize / 2;
             const s = squareSize / 4;
             const angle = 45 * rng.randomInt(0, 1);
@@ -166,7 +126,7 @@ const always = K(true);
         }, always],
 
         // Diagonal
-        [(g, color) => {
+        [(g, colorUrn, color) => {
             g.appendChild(svg("path", {
                 d: rng.randomItem([
                     `M0,0H${squareSize}V${squareSize}z`,
@@ -177,7 +137,7 @@ const always = K(true);
         }, always],
 
         // Letter
-        [(g, color) => {
+        [(g, colorUrn, color) => {
             const angle = 90 * rng.randomInt(0, 3);
             const s = squareSize / 2;
             g.appendChild(svg("text", {
@@ -195,30 +155,25 @@ const always = K(true);
         }, always],
 
         // Smaller block
-        [g => {
-            block(g, 0, 0, 0.5);
-            block(g, 0.5, 0, 0.5);
-            block(g, 0, 0.5, 0.5);
-            block(g, 0.5, 0.5, 0.5);
+        [(g, colorUrn) => {
+            block(g, colorUrn, 0, 0, 0.5);
+            block(g, colorUrn, 0.5, 0, 0.5);
+            block(g, colorUrn, 0, 0.5, 0.5);
+            block(g, colorUrn, 0.5, 0.5, 0.5);
         }, scale => scale === 1],
 
         // Large block
-        [g => {
-            block(g, 0, 0, 2);
+        [(g, colorUrn) => {
+            block(g, colorUrn, 0, 0, 2);
         }, (scale, x, y) => scale === 1 && x < columnCount - 1 && y < rowCount - 1 &&
             !filled[x + 1][y] && !filled[x][y + 1] && !filled[x + 1][y + 1]
         ]
     ];
 
-    const filled = range(1, columnCount).map(() => range(1, rowCount).map(K(false)));
+    let filled;
+    let rngState;
 
-    for (let x of range(1, columnCount)) {
-        for (let y of range(1, rowCount)) {
-            block(grid, x - 1, y - 1);
-        }
-    }
-
-    function block(parent, x, y, scale = 1) {
+    function block(parent, colorUrn, x, y, scale = 1) {
         if (scale === 1 && filled[x][y]) {
             return;
         }
@@ -257,7 +212,75 @@ const always = K(true);
         while (!p(scale, x, y)) {
             [f, p] = rng.randomItem(patterns);
         }
-        f(g, fgColor, bgColor);
+        f(g, colorUrn, fgColor, bgColor);
     }
+
+    function generateBlocks(grid, colorUrn) {
+        for (let x of range(1, columnCount)) {
+            for (let y of range(1, rowCount)) {
+                block(grid, colorUrn, x - 1, y - 1);
+            }
+        }
+    }
+
+    // The main grid
+    (async function generateGrid(i) {
+        const grid = root.appendChild(svg("g"));
+
+        for (let j = 0; j < i; ++j) {
+            rng.random();
+        }
+
+        const colors = rng.randomItem(
+            await fetch("https://unpkg.com/nice-color-palettes@3.0.0/100.json").then(
+                response => response.json()
+            )
+        );
+
+        if (columnCount > rowCount) {
+            const width = squareSize * columnCount / colors.length;
+            root.appendChild(svg("g", {
+                transform: `translate(0, ${rowCount * squareSize + m / 2})`
+            }, colors.map((color, i) => svg("rect", {
+                x: i * width,
+                width,
+                height: m / 2,
+                fill: color
+            }))));
+        } else {
+            const height = squareSize * rowCount / colors.length;
+            root.appendChild(svg("g", {
+                transform: `translate(${columnCount * squareSize + m / 2}, 0)`
+            }, colors.map((color, i) => svg("rect", {
+                y: i * height,
+                width: m / 2,
+                height,
+                fill: color
+            }))));
+        }
+
+        root.lastChild.addEventListener("click", () => {
+            grid.nextSibling.remove();
+            grid.remove();
+            generateGrid(i + 1);
+        });
+
+        const colorUrn = Urn.create(colors, rng);
+        const bgColor = mixRGB(
+            mixRGB(hexToRGB(colorUrn.pick()), hexToRGB(colorUrn.pick())),
+            [255, 255, 255],
+            0.75
+        );
+        document.body.style.backgroundColor = RGBtoHex(bgColor);
+
+        if (i === 0) {
+            rngState = rng.state;
+        } else {
+            rng.state = rngState;
+        }
+
+        filled = range(1, columnCount).map(() => range(1, rowCount).map(K(false)));
+        generateBlocks(grid, colorUrn);
+    }(0));
 
 })();
