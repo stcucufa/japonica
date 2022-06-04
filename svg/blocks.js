@@ -3,6 +3,9 @@
 import { K, lerp, range, svg } from "../lib/util.js";
 import { RNG, Urn } from "../lib/random.js";
 
+const ColorsURL = "https://unpkg.com/nice-color-palettes@3.0.0/100.json";
+const PaletteSize = 5;
+
 function hexToRGB(color) {
     const m = color.match(/^#(..)(..)(..)$/);
     return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
@@ -19,10 +22,19 @@ const mixRGB = (c1, c2, p = 0.5) => [
 const always = K(true);
 
 (async function() {
-
     const seed = parseInt(new URLSearchParams(window.location.search).get("seed"));
     const rng = RNG.create(seed);
     console.info(`Seed: ${rng.state}`);
+
+    // Get colors and keep those with exactly five individual colors
+    // (the urn may be in a different state)
+    const paletteJson = await fetch(ColorsURL).then(
+        response => response.json()
+    );
+    const paletteUrn = Urn.create(paletteJson.filter(
+        colors => [...new Set(colors)].length === PaletteSize
+    ), RNG.create(rng.randomInt()));
+
     const columnCount = rng.randomInt(4, 8);
     const rowCount = rng.randomInt(4, 8);
     const squareSize = 120;
@@ -141,9 +153,9 @@ const always = K(true);
             const angle = 90 * rng.randomInt(0, 3);
             const s = squareSize / 2;
             g.appendChild(svg("text", {
-                "font-family": "ui-monospace",
+                "font-family": "ui-monospace, monospace",
                 "font-weight": 800,
-                "font-size": squareSize * 1.1,
+                "font-size": squareSize,
                 "text-anchor": "middle",
                 "alignment-baseline": "central",
                 "dominant-baseline": "middle",
@@ -224,18 +236,16 @@ const always = K(true);
     }
 
     // The main grid
-    (async function generateGrid(i) {
+    (function generateGrid(i) {
         const grid = root.appendChild(svg("g"));
+        const colors = paletteUrn.pick();
 
-        for (let j = 0; j < i; ++j) {
-            rng.random();
+        // Save or reset the rng state it to create the same grid as last time.
+        if (i === 0) {
+            rngState = rng.state;
+        } else {
+            rng.state = rngState;
         }
-
-        const colors = rng.randomItem(
-            await fetch("https://unpkg.com/nice-color-palettes@3.0.0/100.json").then(
-                response => response.json()
-            )
-        );
 
         if (columnCount > rowCount) {
             const width = squareSize * columnCount / colors.length;
@@ -259,7 +269,7 @@ const always = K(true);
             }))));
         }
 
-        root.lastChild.addEventListener("click", () => {
+        root.lastChild.addEventListener("click", e => {
             grid.nextSibling.remove();
             grid.remove();
             generateGrid(i + 1);
@@ -272,12 +282,6 @@ const always = K(true);
             0.75
         );
         document.body.style.backgroundColor = RGBtoHex(bgColor);
-
-        if (i === 0) {
-            rngState = rng.state;
-        } else {
-            rng.state = rngState;
-        }
 
         filled = range(1, columnCount).map(() => range(1, rowCount).map(K(false)));
         generateBlocks(grid, colorUrn);
