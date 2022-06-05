@@ -1,23 +1,11 @@
 // Inspired by https://frontend.horse/articles/generative-grids/
 
+import { hexToRGB, RGBtoHex, mixRGB } from "../lib/colors.js";
 import { K, lerp, range, svg } from "../lib/util.js";
 import { RNG, Urn } from "../lib/random.js";
 
 const ColorsURL = "https://unpkg.com/nice-color-palettes@3.0.0/100.json";
 const PaletteSize = 5;
-
-function hexToRGB(color) {
-    const m = color.match(/^#(..)(..)(..)$/);
-    return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
-}
-
-const RGBtoHex = color => `#${color.map(c => c.toString(16).padStart(2, "0")).join("")}`;
-
-const mixRGB = (c1, c2, p = 0.5) => [
-    Math.round(lerp(c1[0], c2[0], p)),
-    Math.round(lerp(c1[1], c2[1], p)),
-    Math.round(lerp(c1[2], c2[2], p))
-];
 
 const always = K(true);
 
@@ -244,7 +232,7 @@ const always = K(true);
         if (i === 0) {
             rngState = rng.state;
         } else {
-            rng.state = rngState;
+            rng.seed(rngState);
         }
 
         if (columnCount > rowCount) {
